@@ -1,9 +1,17 @@
 name: Deploy Fullstack Application to Google App Engine
 
 on:
-  push:
-    branches:
-      - main
+  # Allow manual triggering with an optional input for the release tag
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to deploy'
+        required: false
+
+  # Automatically trigger on release
+  release:
+    types:
+      - published # Only trigger when a release is published
 
 jobs:
   deploy-frontend:
@@ -12,6 +20,20 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+
+    - name: Determine Release Tag
+      id: determine_tag
+      run: |
+        if [ "${{ github.event_name }}" == "release" ]; then
+          echo "Release event detected"
+          echo "release_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+        elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+          echo "Manual run with release tag input"
+          echo "release_tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
+        else
+          echo "Error: No release tag provided" >&2
+          exit 1
+        fi
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -38,6 +60,20 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+
+    - name: Determine Release Tag
+      id: determine_tag
+      run: |
+        if [ "${{ github.event_name }}" == "release" ]; then
+          echo "Release event detected"
+          echo "release_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+        elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+          echo "Manual run with release tag input"
+          echo "release_tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
+        else
+          echo "Error: No release tag provided" >&2
+          exit 1
+        fi
 
     - name: Set up Python
       uses: actions/setup-python@v3
