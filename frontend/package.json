@@ -21,13 +21,6 @@
     "fmt": "prettier --write 'src/**/*.{js,jsx,ts,tsx,json,css,scss,md,yml,yaml}'",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,scss,md,yml,yaml,json}": [
-      "npm run lint",
-      "npm run fmt:check",
-      "git add"
-    ]
-  },
   "eslintConfig": {
     "extends": [
       "react-app",

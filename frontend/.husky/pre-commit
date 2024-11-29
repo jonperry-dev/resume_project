@@ -1,2 +1,3 @@
 npm test
-npm fmt:check
+npm run lint
+npm run fmt:check
