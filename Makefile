@@ -52,12 +52,12 @@ lint-yaml:
 .PHONY: fmt-yaml-check
 fmt-yaml-check:
 	@echo "Checking YAML formatting..."
-	npx prettier --check "**/*.yml"
+	npx prettier --check "**/*.yml" "**/*.yaml"
 
 .PHONY: fmt-yaml
 fmt-yaml:
 	@echo "Formatting YAML files..."
-	npx prettier --write "**/*.yml"
+	npx prettier --write "**/*.yml" "**/*.yaml"
 
 .PHONY: lint
 lint: lint-frontend lint-backend lint-yaml
@@ -71,7 +71,7 @@ fmt: fmt-frontend fmt-backend fmt-yaml
 fmt-check: fmt-frontend-check fmt-backend-check fmt-yaml-check
 	@echo "Formatting check completed for both frontend and backend."
 
-.PHONY: test 
+.PHONY: test
 test: test-frontend test-backend
 	@echo "Testing completed for both frontend and backend."
 
