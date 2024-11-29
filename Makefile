@@ -3,6 +3,8 @@
 FRONTEND_DIR := frontend
 BACKEND_DIR := backend
 PYTHON := python3
+GCP_PROJECT_NAME := ResumeAI
+GCP_CREDENTIALS := google-credentials.json
 
 default: all
 
@@ -159,6 +161,11 @@ install-gcloud:
 install-vault:
 	@if [ "$(shell uname -s)" = "Linux" ]; then \
 		echo "Installing vault for Linux"; \
+		sudo apt-get update; \
+		sudo apt-get -y install gpg coreutils; \
+		curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg; \
+		echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list; \
+		sudo apt update && sudo apt install hcp -y; \
 	elif [ "$(shell uname -s)" = "Darwin" ]; then \
 		echo "Installing gcloud for macOS..."; \
 		$(MAKE) $(MAKEFLAGS) install-homebrew; \
@@ -213,3 +220,19 @@ dev-requirements:
 	$(MAKE) $(MAKEFLAGS) install-gcloud
 	$(PYTHON) -m pip install yamllint pre-commit
 	pre-commit install
+
+.PHONY: gcp-credentials
+gcp-credentials:
+	hcp vault-secrets secrets open GCP_CREDENTIALS -o $$GCP_CREDENTIALS
+
+.SILENT: gcp-login
+.PHONY: gcp-login
+gcp-login:
+	if [ ! -f $(GCP_CREDENTIALS) ]; then \
+        echo "$(GCP_CREDENTIALS) does not exist. Running make target..."; \
+        $(MAKE) $(MAKEFLAGS) install-vault; \
+		$(MAKE) $(MAKEFLAGS) install-gcloud; \
+		$(MAKE) $(MAKEFLAGS) gcp-credentials; \
+    fi
+	gcloud auth login --cred-file=$$GCP_CREDENTIALS
+	gcloud config set project $(shell hcp vault-secrets run env | grep GCP_PROJECT_ID | cut -d'=' -f2)
