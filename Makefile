@@ -44,16 +44,31 @@ test-backend:
 	@echo "Running backend tests..."
 	cd $(BACKEND_DIR) && $(PYTHON) -m pytest
 
+.PHONY: lint-yaml
+lint-yaml:
+	@echo "Linting YAML files..."
+	yamllint .
+
+.PHONY: fmt-yaml-check
+fmt-yaml-check:
+	@echo "Checking YAML formatting..."
+	prettier --check "**/*.yml" "**/*.yaml"
+
+.PHONY: 
+fmt-yaml:
+	@echo "Formatting YAML files..."
+	prettier --write "**/*.yml" "**/*.yaml"
+
 .PHONY: lint
-lint: lint-frontend lint-backend
+lint: lint-frontend lint-backend lint-yaml
 	@echo "Linting completed for both frontend and backend."
 
 .PHONY: fmt
-fmt: fmt-frontend fmt-backend
+fmt: fmt-frontend fmt-backend fmt-yaml
 	@echo "Formatting completed for both frontend and backend."
 
 .PHONY: fmt-check
-fmt-check: fmt-frontend-check fmt-backend-check
+fmt-check: fmt-frontend-check fmt-backend-check fmt-yaml-check
 	@echo "Formatting check completed for both frontend and backend."
 
 .PHONY: test 
