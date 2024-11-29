@@ -118,4 +118,5 @@ install-node-react: install-node
 
 .PHONY: dev-requirements
 dev-requirements: install-node-react
-	$(PYTHON) -m pip install yamllint
+	$(PYTHON) -m pip install yamllint pre-commit
+	pre-commit install
