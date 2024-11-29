@@ -3,6 +3,13 @@
 FRONTEND_DIR := frontend
 BACKEND_DIR := backend
 PYTHON := python3
+JOBS ?= 4
+
+.PHONY: all
+all:
+	@echo "Running with $(JOBS) parallel jobs..."
+	$(MAKE) -j$(JOBS) fmt
+	$(MAKE) -j$(JOBS) test
 
 .PHONY: lint-frontend
 lint-frontend:
@@ -80,7 +87,7 @@ install-node:
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 	  echo "Installing Node.js v20 on macOS..."; \
 	  if ! command -v node > /dev/null; then \
-	  	$(MAKE) install-homebrew; \
+	  	$(MAKE) -j$(JOBS) install-homebrew; \
 	    brew install node@20; \
 	    brew link --overwrite --force node@20; \
 	  else \
@@ -142,7 +149,7 @@ install-vault:
 		echo "Installing vault for Linux"; \
 	elif [ "$(shell uname -s)" = "Darwin" ]; then \
 		echo "Installing gcloud for macOS..."; \
-		$(MAKE) install-homebrew; \
+		$(MAKE) -j$(JOBS) install-homebrew; \
 		brew tap hashicorp/tap; \
 		brew install hashicorp/tap/hcp; \
 	else \
