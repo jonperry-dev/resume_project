@@ -54,7 +54,7 @@ fmt-yaml-check:
 	@echo "Checking YAML formatting..."
 	prettier --check "**/*.yml" "**/*.yaml"
 
-.PHONY: 
+.PHONY: fmt-yaml
 fmt-yaml:
 	@echo "Formatting YAML files..."
 	prettier --write "**/*.yml" "**/*.yaml"
