@@ -1,0 +1,55 @@
+name: Deploy Fullstack Application to Google App Engine
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm install
+
+    - name: Build React app
+      working-directory: frontend
+      run: npm run build
+
+    - name: Deploy Frontend to GAE
+      working-directory: frontend
+      run: |
+        gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        gcloud app deploy --quiet
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      working-directory: backend
+      run: pip install -r requirements.txt
+
+    - name: Deploy Backend to GAE
+      working-directory: backend
+      run: |
+        gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        gcloud app deploy --quiet
