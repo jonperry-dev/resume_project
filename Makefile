@@ -14,6 +14,11 @@ fmt-frontend:
 	@echo "Formatting frontend..."
 	cd $(FRONTEND_DIR) && npm run prettier -- --write "src/**/*.{js,jsx,ts,tsx}"
 
+.PHONY: fmt-frontend-check
+fmt-frontend-check:
+	@echo "Checking frontend formatting..."
+	cd $(FRONTEND_DIR) && npm run prettier -- --check "src/**/*.{js,jsx,ts,tsx}"
+
 .PHONY: test-frontend
 test-frontend:
 	@echo "Running frontend tests..."
@@ -29,6 +34,11 @@ fmt-backend:
 	@echo "Formatting backend..."
 	cd $(BACKEND_DIR) && $(PYTHON) -m black .
 
+.PHONY: fmt-backend-check
+fmt-backend-check:
+	@echo "Checking backend formatting..."
+	cd $(BACKEND_DIR) && $(PYTHON) -m black --check .
+
 .PHONY: test-backend
 test-backend:
 	@echo "Running backend tests..."
@@ -41,6 +51,10 @@ lint: lint-frontend lint-backend
 .PHONY: fmt
 fmt: fmt-frontend fmt-backend
 	@echo "Formatting completed for both frontend and backend."
+
+.PHONY: fmt-check
+fmt-check: fmt-frontend-check fmt-backend-check
+	@echo "Formatting check completed for both frontend and backend."
 
 .PHONY: test 
 test: test-frontend test-backend
