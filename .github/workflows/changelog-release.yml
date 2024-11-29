@@ -1,0 +1,54 @@
+name: Update Changelog on Release
+
+on:
+  workflow_call:
+  release:
+    types:
+      - published
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update Changelog
+        id: update_changelog
+        run: |
+          RELEASE_VERSION="${{ env.release_version }}"
+          RELEASE_DATE=$(date +'%Y-%m-%d')
+
+          # Ensure CHANGELOG.md exists
+          if [ ! -f CHANGELOG.md ]; then
+            echo "CHANGELOG.md not found!"
+            exit 1
+          fi
+
+          # Check if there is an Unreleased section
+          if ! grep -q "## \\[Unreleased\\]" CHANGELOG.md; then
+            echo "No [Unreleased] section found in CHANGELOG.md."
+            exit 1
+          fi
+
+          # Extract the Unreleased section
+          UNRELEASED_CHANGES=$(awk '/## \[Unreleased\]/,/## \[/' CHANGELOG.md | sed '1d;$d')
+
+          if [ -z "$UNRELEASED_CHANGES" ]; then
+            echo "No changes found under [Unreleased]."
+            exit 1
+          fi
+
+          # Create a new release section and clear the Unreleased section
+          sed -i "s|## \\[Unreleased\\]|## [Unreleased]\\n\\n## [$RELEASE_VERSION] - $RELEASE_DATE\\n$UNRELEASED_CHANGES\\n|" CHANGELOG.md
+          echo "" > tmp
+          mv tmp CHANGELOG.md
+
+      - name: Commit Updated Changelog
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for release ${{ env.release_version }}"
+          git push

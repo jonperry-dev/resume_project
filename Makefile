@@ -52,12 +52,12 @@ lint-yaml:
 .PHONY: fmt-yaml-check
 fmt-yaml-check:
 	@echo "Checking YAML formatting..."
-	prettier --check "**/*.yml" "**/*.yaml"
+	npx prettier --check "**/*.yml"
 
 .PHONY: fmt-yaml
 fmt-yaml:
 	@echo "Formatting YAML files..."
-	prettier --write "**/*.yml" "**/*.yaml"
+	npx prettier --write "**/*.yml"
 
 .PHONY: lint
 lint: lint-frontend lint-backend lint-yaml
@@ -74,3 +74,48 @@ fmt-check: fmt-frontend-check fmt-backend-check fmt-yaml-check
 .PHONY: test 
 test: test-frontend test-backend
 	@echo "Testing completed for both frontend and backend."
+
+.PHONY: install-node
+install-node:
+	@echo "Detecting operating system..."
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+	  echo "Installing Node.js v20 on macOS..."; \
+	  if ! command -v node > /dev/null; then \
+	    brew install node@20; \
+	    brew link --overwrite --force node@20; \
+	  else \
+	    echo "Node.js is already installed."; \
+	  fi; \
+	elif [ "$(shell uname)" = "Linux" ]; then \
+	  echo "Installing Node.js v20 on Linux..."; \
+	  if ! command -v node > /dev/null; then \
+	    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
+	    sudo apt-get install -y nodejs; \
+	  else \
+	    INSTALLED_VERSION=$$(node -v | grep -oE '[0-9]+'); \
+	    if [ "$$INSTALLED_VERSION" -ne "20" ]; then \
+	      echo "Updating Node.js to v20..."; \
+	      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
+	      sudo apt-get install -y nodejs; \
+	    else \
+	      echo "Node.js v20 is already installed."; \
+	    fi; \
+	  fi; \
+	elif [[ "$(OS)" == "Windows_NT" ]]; then \
+	  echo "Please install Node.js v20 manually on Windows. Visit https://nodejs.org/"; \
+	else \
+	  echo "Unsupported operating system. Please install Node.js v20 manually."; \
+	  exit 1; \
+	fi
+
+.PHONY: install-node-react
+install-node-react: install-node
+	@echo "Installing Node.js and React dependencies..."
+	npm install --save react react-dom
+	npm install --save-dev @types/react @types/react-dom typescript
+	npm install --save-dev --save-exact prettier
+	@echo "Node.js and React dependencies installed successfully."
+
+.PHONY: dev-requirements
+dev-requirements: install-node-react
+	$(PYTHON) -m pip install yamllint

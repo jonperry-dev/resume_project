@@ -1,91 +1,91 @@
 name: Deploy Fullstack Application to Google App Engine
 
 on:
-  # Allow manual triggering with an optional input for the release tag
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag to deploy'
+        description: "Release tag to deploy"
         required: false
 
-  # Automatically trigger on release
   release:
     types:
-      - published # Only trigger when a release is published
+      - published
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Determine Release Tag
-      id: determine_tag
-      run: |
-        if [ "${{ github.event_name }}" == "release" ]; then
-          echo "Release event detected"
-          echo "release_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-        elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
-          echo "Manual run with release tag input"
-          echo "release_tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
-        else
-          echo "Error: No release tag provided" >&2
-          exit 1
-        fi
+      - name: Validate Release Tag
+        id: validate_tag
+        run: |
+          RELEASE_TAG="${{ github.event.release.tag_name }}"
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16
+          # SemVer regex validation
+          SEMVER_REGEX="^(v)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
 
-    - name: Install dependencies
-      working-directory: frontend
-      run: npm install
+          if [[ ! "$RELEASE_TAG" =~ $SEMVER_REGEX ]]; then
+            echo "Error: Release tag '$RELEASE_TAG' is not a valid Semantic Version."
+            exit 1
+          fi
 
-    - name: Build React app
-      working-directory: frontend
-      run: npm run build
+          echo "Validated release tag: $RELEASE_TAG"
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_ENV
 
-    - name: Deploy Frontend to GAE
-      working-directory: frontend
-      run: |
-        gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-        gcloud app deploy --quiet
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build React app
+        working-directory: frontend
+        run: npm run build
+
+      - name: Deploy Frontend to GAE
+        working-directory: frontend
+        run: |
+          gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          gcloud app deploy --quiet
 
   deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Determine Release Tag
-      id: determine_tag
-      run: |
-        if [ "${{ github.event_name }}" == "release" ]; then
-          echo "Release event detected"
-          echo "release_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-        elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
-          echo "Manual run with release tag input"
-          echo "release_tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
-        else
-          echo "Error: No release tag provided" >&2
-          exit 1
-        fi
+      - name: Determine Release Tag
+        id: determine_tag
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "Release event detected"
+            echo "release_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "Manual run with release tag input"
+            echo "release_tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
+          else
+            echo "Error: No release tag provided" >&2
+            exit 1
+          fi
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.9
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      working-directory: backend
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
 
-    - name: Deploy Backend to GAE
-      working-directory: backend
-      run: |
-        gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-        gcloud app deploy --quiet
+      - name: Deploy Backend to GAE
+        working-directory: backend
+        run: |
+          gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          gcloud app deploy --quiet

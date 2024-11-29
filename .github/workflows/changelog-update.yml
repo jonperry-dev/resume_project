@@ -1,0 +1,48 @@
+name: Changelog Update
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Extract Changelog Update from PR Description
+        id: extract_changelog
+        run: |
+          # Extract the `## Changelog Update` section from the PR body
+          PR_BODY=$(jq -r .pull_request.body "$GITHUB_EVENT_PATH")
+          CHANGELOG_UPDATE=$(echo "$PR_BODY" | awk '/## Changelog Update/{flag=1; next} /^## /{flag=0} flag')
+
+          if [ -z "$CHANGELOG_UPDATE" ]; then
+            echo "No changelog update found in PR description."
+            exit 1
+          fi
+
+          echo "Changelog content found:"
+          echo "$CHANGELOG_UPDATE"
+          echo "changelog_update=$CHANGELOG_UPDATE" >> $GITHUB_ENV
+
+      - name: Append Changelog Update to CHANGELOG.md
+        run: |
+          if ! grep -q "## [Unreleased]" CHANGELOG.md; then
+            echo "## [Unreleased]" >> CHANGELOG.md
+          fi
+          echo "$CHANGELOG_UPDATE" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+      - name: Commit Changelog Update
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md from PR #${{ github.event.pull_request.number }}"
+          git push

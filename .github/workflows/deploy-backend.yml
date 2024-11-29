@@ -3,7 +3,7 @@ name: Deploy Backend to Google App Engine
 on:
   push:
     paths:
-      - 'backend/**'
+      - "backend/**"
     branches:
       - main
 
@@ -12,20 +12,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: 3.9
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      working-directory: backend
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
 
-    - name: Deploy to Google App Engine
-      working-directory: backend
-      run: |
-        gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-        gcloud app deploy --quiet
+      - name: Deploy to Google App Engine
+        working-directory: backend
+        run: |
+          gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          gcloud app deploy --quiet
