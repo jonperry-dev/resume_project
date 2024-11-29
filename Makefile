@@ -3,13 +3,13 @@
 FRONTEND_DIR := frontend
 BACKEND_DIR := backend
 PYTHON := python3
-JOBS ?= 4
+
+default: all
 
 .PHONY: all
 all:
-	@echo "Running with $(JOBS) parallel jobs..."
-	$(MAKE) -j$(JOBS) fmt
-	$(MAKE) -j$(JOBS) test
+	$(MAKE) $(MAKEFLAGS) fmt
+	$(MAKE) $(MAKEFLAGS) test
 
 .PHONY: lint-frontend
 lint-frontend:
@@ -67,19 +67,30 @@ fmt-yaml:
 	npx prettier --write "**/*.yml" "**/*.yaml"
 
 .PHONY: lint
-lint: lint-frontend lint-backend lint-yaml
+lint:
+	$(MAKE) $(MAKEFLAGS) lint-frontend
+	$(MAKE) $(MAKEFLAGS) lint-backend
+	$(MAKE) $(MAKEFLAGS) lint-yaml
 	@echo "Linting completed for both frontend and backend."
 
 .PHONY: fmt
-fmt: fmt-frontend fmt-backend fmt-yaml
+fmt: 
+	$(MAKE) $(MAKEFLAGS) fmt-frontend
+	$(MAKE) $(MAKEFLAGS) fmt-backend
+	$(MAKE) $(MAKEFLAGS) fmt-yaml
 	@echo "Formatting completed for both frontend and backend."
 
 .PHONY: fmt-check
-fmt-check: fmt-frontend-check fmt-backend-check fmt-yaml-check
+fmt-check:
+	$(MAKE) $(MAKEFLAGS) fmt-frontend-check
+	$(MAKE) $(MAKEFLAGS) fmt-backend-check
+	$(MAKE) $(MAKEFLAGS) fmt-yaml-check
 	@echo "Formatting check completed for both frontend and backend."
 
 .PHONY: test
-test: test-frontend test-backend
+test: 
+	$(MAKE) $(MAKEFLAGS) test-frontend
+	$(MAKE) $(MAKEFLAGS) test-backend
 	@echo "Testing completed for both frontend and backend."
 
 .PHONY: install-node
@@ -87,7 +98,7 @@ install-node:
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 	  echo "Installing Node.js v20 on macOS..."; \
 	  if ! command -v node > /dev/null; then \
-	  	$(MAKE) -j$(JOBS) install-homebrew; \
+	  	$(MAKE) $(MAKEFLAGS) install-homebrew; \
 	    brew install node@20; \
 	    brew link --overwrite --force node@20; \
 	  else \
@@ -116,7 +127,8 @@ install-node:
 	fi
 
 .PHONY: install-node-react
-install-node-react: install-node
+install-node-react:
+	$(MAKE) $(MAKEFLAGS) install-node
 	@echo "Installing Node.js and React dependencies..."
 	npm install --save react react-dom
 	npm install --save-dev @types/react @types/react-dom typescript
@@ -149,7 +161,7 @@ install-vault:
 		echo "Installing vault for Linux"; \
 	elif [ "$(shell uname -s)" = "Darwin" ]; then \
 		echo "Installing gcloud for macOS..."; \
-		$(MAKE) -j$(JOBS) install-homebrew; \
+		$(MAKE) $(MAKEFLAGS) install-homebrew; \
 		brew tap hashicorp/tap; \
 		brew install hashicorp/tap/hcp; \
 	else \
@@ -195,6 +207,9 @@ install-homebrew:
 
 
 .PHONY: dev-requirements
-dev-requirements: install-node-react
+dev-requirements:
+	$(MAKE) $(MAKEFLAGS) install-vault
+	$(MAKE) $(MAKEFLAGS) install-node-react
+	$(MAKE) $(MAKEFLAGS) install-gcloud
 	$(PYTHON) -m pip install yamllint pre-commit
 	pre-commit install
