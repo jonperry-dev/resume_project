@@ -12,12 +12,12 @@ lint-frontend:
 .PHONY: fmt-frontend
 fmt-frontend:
 	@echo "Formatting frontend..."
-	cd $(FRONTEND_DIR) && npm run prettier -- --write "src/**/*.{js,jsx,ts,tsx}"
+	cd $(FRONTEND_DIR) && npm run fmt:fix
 
 .PHONY: fmt-frontend-check
 fmt-frontend-check:
 	@echo "Checking frontend formatting..."
-	cd $(FRONTEND_DIR) && npm run prettier -- --check "src/**/*.{js,jsx,ts,tsx}"
+	cd $(FRONTEND_DIR) && npm run fmt:check
 
 .PHONY: test-frontend
 test-frontend:
