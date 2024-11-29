@@ -77,10 +77,10 @@ test: test-frontend test-backend
 
 .PHONY: install-node
 install-node:
-	@echo "Detecting operating system..."
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 	  echo "Installing Node.js v20 on macOS..."; \
 	  if ! command -v node > /dev/null; then \
+	  	$(MAKE) install-homebrew; \
 	    brew install node@20; \
 	    brew link --overwrite --force node@20; \
 	  else \
@@ -115,6 +115,77 @@ install-node-react: install-node
 	npm install --save-dev @types/react @types/react-dom typescript
 	npm install --save-dev --save-exact prettier
 	@echo "Node.js and React dependencies installed successfully."
+
+.PHONY: install-gcloud
+install-gcloud:
+	@if [ "$(shell uname -s)" = "Linux" ]; then \
+		echo "Installing gcloud for Linux..."; \
+		sudo apt-get -y update && sudo apt-get -y upgrade \
+		sudo apt-get -y install apt-transport-https ca-certificates gnupg curl \
+		curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+		echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+		sudo apt-get update && sudo apt-get install google-cloud-cli \
+	elif [ "$(shell uname -s)" = "Darwin" ]; then \
+		echo "Installing gcloud for macOS..."; \
+		curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-darwin-x86_64.tar.gz && \
+		tar -xzf google-cloud-cli-darwin-x86_64.tar.gz && \
+		./google-cloud-sdk/install.sh --quiet; \
+	else \
+		echo "Unsupported operating system. Please install gcloud manually from https://cloud.google.com/sdk/docs/install"; \
+		exit 1; \
+	fi
+	@echo "Google Cloud SDK installation completed."
+
+.PHONY: install-vault
+install-vault:
+	@if [ "$(shell uname -s)" = "Linux" ]; then \
+		echo "Installing vault for Linux"; \
+	elif [ "$(shell uname -s)" = "Darwin" ]; then \
+		echo "Installing gcloud for macOS..."; \
+		$(MAKE) install-homebrew; \
+		brew tap hashicorp/tap; \
+		brew install hashicorp/tap/hcp; \
+	else \
+		echo "Unsupported operating system. Please install gcloud manually from https://cloud.google.com/sdk/docs/install"; \
+		exit 1; \
+	fi
+	@echo "Vault installation completed."
+
+.PHONY: install-homebrew
+install-homebrew:
+	@echo "Checking if Homebrew is installed..."
+	@if ! which brew >/dev/null 2>&1; then \
+		echo "Homebrew is not installed. Installing Homebrew..."; \
+		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+		echo "Homebrew installation completed."; \
+
+	else \
+		echo "Homebrew is already installed."; \
+	fi
+	if [ "$$(uname -m)" = "arm64" ]; then \
+		BREW_PATH="/opt/homebrew/bin"; \
+	else \
+		BREW_PATH="/usr/local/bin"; \
+	fi; \
+
+	SHELL_NAME=$$(basename $$SHELL)
+
+	if [ "$$SHELL_NAME" = "bash" ]; then \
+		RC_FILE="~/.bashrc"; \
+	elif [ "$$SHELL_NAME" = "zsh" ]; then \
+		RC_FILE="~/.zshrc"; \
+	else \
+		RC_FILE="~/.profile"; \
+	fi; \
+
+	echo "Detected shell: $$SHELL_NAME. Updating $$RC_FILE..."
+	echo "export PATH=$$BREW_PATH:\$$PATH" >> $$RC_FILE
+	echo "Added Homebrew to PATH in $$RC_FILE."
+	if ! echo $$PATH | grep -q "$$BREW_PATH"; then \
+		export PATH=$$BREW_PATH:$$PATH; \
+		echo "Homebrew path exported temporarily. No need to restart the terminal."; \
+	fi
+
 
 .PHONY: dev-requirements
 dev-requirements: install-node-react
