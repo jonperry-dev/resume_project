@@ -1,0 +1,41 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies for frontend
+        run: |
+          cd frontend
+          npm install
+
+      - name: Install dependencies for backend
+        run: |
+          cd backend
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run fmt-check
+        run: make fmt-check
+
+      - name: Run lint
+        run: make lint
