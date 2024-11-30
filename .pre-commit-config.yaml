@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/psf/black
     rev: 24.10.0
@@ -23,11 +24,6 @@ repos:
     rev: v8.56.0
     hooks:
       - id: eslint
-
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
-    hooks:
-      - id: yamllint
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0

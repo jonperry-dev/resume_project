@@ -9,7 +9,7 @@ GCP_REGION := us-west2
 GCP_REPOSITORY_NAME := resume-ai-docker-repo
 SERVER_HOST_NAME := 0.0.0.0
 SERVER_PORT := 8080
-DOCKERFILE := server.Dockerfile
+DOCKER_FILE := server.Dockerfile
 IMAGE_NAME := resumeai-service
 TAG := latest
 IMAGE_URI = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(REPOSITORY_NAME)/$(IMAGE_NAME):$(TAG)
@@ -248,11 +248,19 @@ gcp-login:
 .PHONY: build-backend
 build-backend:
 	docker build \
-		-f $(DOCKERFILE) \
+		-f $(DOCKER_FILE) \
 		-t $(IMAGE_NAME):$(TAG) \
 		--build-arg HOST_NAME=$(SERVER_HOST_NAME) \
 		--build-arg PORT=$(SERVER_PORT) \
 		--build-arg BACKEND_DIR=$(BACKEND_DIR) \
+		.
+
+.PHONY: build-frontend
+build-frontend:
+	docker build \
+		-f $(DOCKER_FILE) \
+		-t $(IMAGE_NAME):$(TAG) \
+		--build-arg FRONTEND_DIR=$(FRONTEND_DIR) \
 		.
 
 .PHONY: gcp-deploy-backend
@@ -265,4 +273,14 @@ gcp-deploy-backend:
 		--region $(GCP_REGION) \
 		--platform maanged \
 		--allow-authenticated
-	
+
+.PHONY: gcp-deploy-frontend
+gcp-deploy-frontend:
+	$(MAKE) $(MAKEFLAGS) build-frontend
+	docker tag $(IMAGE_NAME) $(IMAGE_URI)
+	docker push $(IMAGE_URI)
+	gcloud run deploy $(IMAGE_NAME) \
+		--image $(IMAGE_URI) \
+		--region $(GCP_REGION) \
+		--platform maanged \
+		--allow-authenticated
