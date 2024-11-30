@@ -5,14 +5,15 @@ BACKEND_DIR := backend
 PYTHON := python3
 GCP_PROJECT_NAME := ResumeAI
 GCP_CREDENTIALS := google-credentials.json
-GCP_REGION := us-west2
+GCP_REGION := us-central1
 GCP_REPOSITORY_NAME := resume-ai-docker-repo
+GCP_PROJECT_ID := proud-portfolio-386621
 SERVER_HOST_NAME := 0.0.0.0
 SERVER_PORT := 8080
-DOCKER_FILE := server.Dockerfile
-IMAGE_NAME := resumeai-service
+DOCKER_FILE ?= server.Dockerfile
+IMAGE_NAME ?= resumeai-service
 TAG := latest
-IMAGE_URI = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(REPOSITORY_NAME)/$(IMAGE_NAME):$(TAG)
+IMAGE_URI = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(GCP_REPOSITORY_NAME)/$(IMAGE_NAME):$(TAG)
 
 default: all
 
@@ -271,8 +272,8 @@ gcp-deploy-backend:
 	gcloud run deploy $(IMAGE_NAME) \
 		--image $(IMAGE_URI) \
 		--region $(GCP_REGION) \
-		--platform maanged \
-		--allow-authenticated
+		--platform managed \
+		--allow-unauthenticated
 
 .PHONY: gcp-deploy-frontend
 gcp-deploy-frontend:
@@ -282,5 +283,5 @@ gcp-deploy-frontend:
 	gcloud run deploy $(IMAGE_NAME) \
 		--image $(IMAGE_URI) \
 		--region $(GCP_REGION) \
-		--platform maanged \
-		--allow-authenticated
+		--platform managed \
+		--allow-unauthenticated
