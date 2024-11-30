@@ -1,5 +1,0 @@
-Secret Name:    GCP_PROJECT_ID
-Type:           kv
-Created At:     2024-11-29T23:15:36.717Z
-Latest Version: 1
-Value:          proud-portfolio-386621
