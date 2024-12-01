@@ -75,10 +75,11 @@ jobs:
             echo "Error: No release tag provided" >&2
             exit 1
           fi
-          - name: Authenticate with Google Cloud
-          uses: google-github-actions/auth@v2
-          with:
-            credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
       - name: Configure gcloud
         run: |

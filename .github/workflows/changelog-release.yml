@@ -22,7 +22,7 @@ jobs:
           # SemVer regex validation
           SEMVER_REGEX="^(v)?([0-9]+)(\.)([0-9]+)(\.)([0-9]+)(|-[a-z]+(\.)[0-9]+)$"
 
-          if [[ ! "$RELEASE_TAG" =~ $SEMVER_REGEX ]]; then
+          if [[ ! "$RELEASE_VERSION" =~ $SEMVER_REGEX ]]; then
             echo "Error: Release tag '$RELEASE_TAG' is not a valid Semantic Version."
             exit 1
           fi
