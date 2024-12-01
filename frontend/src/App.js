@@ -1,15 +1,15 @@
-import logo from "./logo.svg";
-import "./App.css";
+import { ThemeProvider } from "styled-components";
+import GlobalStyles from "./GlobalStyles";
+import { theme } from "./theme";
+import Chatbot from "./Chatbot";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Initialization v4 - App Coming Soon!</p>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
+      <Chatbot />
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
