@@ -1,10 +1,6 @@
 name: Update Changelog on Release
 
-on:
-  workflow_call:
-  release:
-    types:
-      - published
+on: workflow_dispatch
 
 jobs:
   update-changelog:
