@@ -59,6 +59,11 @@ jobs:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
+      - name: Configure gcloud
+        run: |
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
       - name: Deploy Frontend Services
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
