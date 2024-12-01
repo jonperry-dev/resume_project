@@ -26,7 +26,7 @@ jobs:
           RELEASE_TAG="${{ github.event.release.tag_name }}"
 
           # SemVer regex validation
-          SEMVER_REGEX="^(v)?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+          SEMVER_REGEX="^(v)?([0-9]+)(\.)([0-9]+)(\.)([0-9]+)(|-[a-z]+(\.)[0-9]+)$"
 
           if [[ ! "$RELEASE_TAG" =~ $SEMVER_REGEX ]]; then
             echo "Error: Release tag '$RELEASE_TAG' is not a valid Semantic Version."
