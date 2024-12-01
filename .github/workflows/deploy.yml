@@ -13,13 +13,9 @@ on:
       - published
 
 jobs:
-  deploy-frontend:
+  cut-release-tag:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Validate Release Tag
         id: validate_tag
         run: |
@@ -36,32 +32,6 @@ jobs:
           echo "Validated release tag: $RELEASE_TAG"
           echo "release_tag=$RELEASE_TAG" >> $GITHUB_ENV
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm install
-
-      - name: Build React app
-        working-directory: frontend
-        run: npm run build
-
-      - name: Deploy Frontend to GAE
-        working-directory: frontend
-        run: |
-          gcloud auth activate-service-account --key-file ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          gcloud app deploy --quiet
-
-  deploy-backend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Determine Release Tag
         id: determine_tag
         run: |
@@ -76,11 +46,36 @@ jobs:
             exit 1
           fi
 
+  gcp-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy Frontend Services
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ secrets.GCP_REGION }}
+          IMAGE_NAME: frontend
+          DOCKER_FILE: frontend.Dockerfile
+        run: make gcp-deploy-frontend
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Configure gcloud
         run: |
           gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
@@ -91,11 +86,3 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_REGION: ${{ secrets.GCP_REGION }}
         run: make gcp-deploy-backend
-
-      - name: Deploy Frontend Services
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: ${{ secrets.GCP_REGION }}
-          IMAGE_NAME: frontend
-          DOCKER_FILE: frontend.Dockerfile
-        run: make gcp-deploy-frontend
