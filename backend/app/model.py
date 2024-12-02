@@ -6,13 +6,11 @@ import os
 
 def get_model():
     model_name = os.environ.get("MODEL_DIR")
-    if not os.path.exists(model_name):
-        model_name = "unsloth/Llama-3.2-3B-Instruct"
     pipe = pipeline(
         "text-generation",
         model=model_name,
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device="cpu",
     )
     return pipe
 

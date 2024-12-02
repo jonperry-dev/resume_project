@@ -121,31 +121,6 @@ const FileUploadButton = styled.label`
   cursor: pointer;
 `;
 
-const Message = styled.div`
-  display: flex;
-  align-items: center;
-  max-width: 70%; /* Limit width to avoid overly wide messages */
-  padding: 10px 15px;
-  margin: 5px 0; /* Add vertical spacing between messages */
-  border-radius: 10px;
-  background: ${({ isBot }) =>
-    isBot ? theme.colors.secondary : theme.colors.secondary};
-  align-self: ${({ isBot }) => (isBot ? "flex-start" : "flex-end")};
-  word-wrap: break-word; /* Ensure long words break appropriately */
-  font-size: 1em; /* Set a default font size */
-
-  @media (max-width: 768px) {
-    max-width: 90%; /* Increase max-width for smaller screens */
-    font-size: 0.9em; /* Slightly smaller font for mobile */
-    padding: 8px 12px; /* Adjust padding for smaller screens */
-  }
-
-  .p {
-    white-space: pre-line; /* Ensure newlines are respected */
-    line-height: 1.5; /* Improve readability */
-  }
-`;
-
 const MessageText = styled.div`
   flex: 1; /* Allow the text container to expand */
   background: ${({ isBot }) =>
@@ -228,8 +203,6 @@ const Chatbot = () => {
   };
 
   const handleSendMessage = async () => {
-    console.log("Endpoint:", process.env.REACT_APP_RANK_ENDPOINT);
-    console.log("API Key:", process.env.REACT_APP_RANK_API_KEY);
     if (textInput.trim() && file && isValidUrl(textInput)) {
       setMessages((prev) => [
         ...prev,

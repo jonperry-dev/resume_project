@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Header, Depends
 from typing import Optional
 from pydantic import BaseModel
 import inspect
 from typing import get_type_hints
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import uvicorn
 import os
 import model as ml_model
@@ -45,17 +47,14 @@ app.add_middleware(
 )
 
 
-def verify_token(authorization: str):
+def verify_token(authorization: str = Header(None)):
     if authorization is None or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=401, detail="Invalid or missing Authorization header"
         )
     token = authorization.split("Bearer ")[1]
-    verify_api_key(token.strip())
 
-
-def verify_api_key(RANK_API_KEY: Optional[str]):
-    if RANK_API_KEY != API_KEY:
+    if token != API_KEY:
         raise HTTPException(status_code=403, detail="Unauthorized access")
 
 
@@ -91,7 +90,9 @@ def scrape(url: str):
     chrome_options.add_argument("--disable-gpu")
 
     # Initialize WebDriver
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=chrome_options
+    )
     try:
         # Open the webpage
         driver.get(url)

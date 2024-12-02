@@ -5,10 +5,13 @@ ARG PORT
 ARG HOST_NAME
 ARG BACKEND_DIR
 ARG MODEL_DIR
+ARG RANK_API_KEY
+
 # Set environment variables for runtime
 ENV APP_HOST=${HOST_NAME}
 ENV APP_PORT=${PORT}
 ENV MODEL_DIR=${MODEL_DIR}
+ENV RANK_API_KEY=${RANK_API_KEY}
 
 WORKDIR /app
 
@@ -26,7 +29,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY ${BACKEND_DIR}/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install -U "huggingface_hub[cli]"
+RUN pip install -U huggingface_hub[cli]
+RUN pip install -U accelerate
+RUN pip install webdriver-manager
 
 RUN --mount=type=secret,id=hf_token \
     huggingface-cli login --token "$(cat /run/secrets/hf_token)" --add-to-git-credential
@@ -52,6 +57,8 @@ unzip chromedriver_linux64.zip && \
 mv chromedriver /usr/bin/chromedriver && \
 chmod +x /usr/bin/chromedriver && \
 rm chromedriver_linux64.zip
+
+EXPOSE ${PORT}
 
 # Run the application
 CMD ["python", "server.py"]
