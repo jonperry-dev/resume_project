@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+FROM python:3.11-slim
 
 # Build arguments
 ARG PORT
@@ -52,9 +52,6 @@ unzip chromedriver_linux64.zip && \
 mv chromedriver /usr/bin/chromedriver && \
 chmod +x /usr/bin/chromedriver && \
 rm chromedriver_linux64.zip
-
-# Expose the specified port
-EXPOSE ${PORT}
 
 # Run the application
 CMD ["python", "server.py"]

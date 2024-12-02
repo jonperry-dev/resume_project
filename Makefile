@@ -284,7 +284,7 @@ gcp-deploy-backend:
 		--platform managed \
 		--cpu=4 \
 		--memory=16Gi \
-		--timeout=1500s \
+		--timeout=3600s \
 		--allow-unauthenticated
 
 .PHONY: gcp-deploy-frontend
