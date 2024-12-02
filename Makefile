@@ -282,6 +282,8 @@ gcp-deploy-backend:
 		--image $(IMAGE_URI) \
 		--region $(GCP_REGION) \
 		--platform managed \
+		--cpu=4 \
+		--memory=16Gi \
 		--allow-unauthenticated
 
 .PHONY: gcp-deploy-frontend
