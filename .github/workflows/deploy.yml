@@ -67,6 +67,8 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_REGION: ${{ secrets.GCP_REGION }}
+          REACT_APP_RANK_API_KEY: ${{ secrets.REACT_APP_RANK_API_KEY }}
+          REACT_APP_RANK_ENDPOINT: ${{ secrets.REACT_APP_RANK_ENDPOINT }}
           IMAGE_NAME: frontend
           DOCKER_FILE: frontend.Dockerfile
         run: make gcp-deploy-frontend
@@ -92,4 +94,6 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_REGION: ${{ secrets.GCP_REGION }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          RANK_API_KEY: ${{ secrets.REACT_APP_RANK_API_KEY }}
         run: make gcp-deploy-backend
