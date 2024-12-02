@@ -54,7 +54,7 @@ const ChatWindow = styled.div`
 `;
 
 const ChatInputSection = styled.div`
-  display: flex;
+  display: absolute;
   align-items: center;
   padding: 10px;
   background: ${(props) => hexToRgba(props.theme.colors.primary, 0.8)};
@@ -159,6 +159,7 @@ const MessageText = styled.div`
   line-height: 1.5; /* Improve readability */
 
   @media (max-width: 768px) {
+    max-width: 90%;
     font-size: 0.9em; /* Adjust font size for mobile */
     padding: 8px 12px;
   }
