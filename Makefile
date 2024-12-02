@@ -264,15 +264,14 @@ build-backend:
 
 .PHONY: build-frontend
 build-frontend:
-	@echo "$(REACT_APP_RANK_ENDPOINT)" > /tmp/api_token
-	DOCKER_BUILDKIT=1 docker build \
-		--secret id=api_token,src=/tmp/api_token \
+	@echo "REACT_APP_RANK_ENDPOINT=$(REACT_APP_RANK_ENDPOINT)" >> .env
+	@echo "REACT_APP_RANK_API_KEY=$(REACT_APP_RANK_API_KEY)" >> .env
+	docker build \
 		-f $(DOCKER_FILE) \
 		-t $(IMAGE_NAME):$(TAG) \
 		--build-arg FRONTEND_DIR=$(FRONTEND_DIR) \
-		--build-arg REACT_APP_RANK_ENDPOINT=$(REACT_APP_RANK_ENDPOINT) \
 		.
-	rm /tmp/api_token
+	rm .env
 
 .PHONY: gcp-deploy-backend
 gcp-deploy-backend:
