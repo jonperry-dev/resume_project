@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import * as pdfjsLib from "pdfjs-dist";
 import { theme } from "./theme";
+import axios from "axios";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 const hexToRgba = (hex, alpha) => {
   const match = hex
@@ -19,6 +22,11 @@ const isValidUrl = (url) => {
     return false;
   }
 };
+
+const MISSING_FILE_URL =
+  "A resume must be uploaded in .pdf format and provide a URL to a job posting.";
+const MISSING_FILE = "A resume must be uploaded in .pdf format.";
+const MISSING_URL = "Provide a valid URL to a job posting.";
 
 const FullScreenChat = styled.div`
   display: flex;
@@ -78,18 +86,16 @@ const InputField = styled.textarea`
 `;
 
 const ErrorMessage = styled.div`
+  position: absolute;
+  top: -25px;
+  left: 0;
   color: red;
   font-size: 0.9em;
-  padding: 5px;
-  border: 1px solid red;
+  padding: 5px 10px;
   border-radius: 4px;
   background-color: #ffe6e6;
-  position: absolute;
-  top: -40px;
-  left: 0;
-  width: 100%;
   opacity: ${({ show }) => (show ? 1 : 0)};
-  transform: ${({ show }) => (show ? "translateY(0)" : "translateY(20px)")};
+  transform: ${({ show }) => (show ? "translateY(0)" : "translateY(10px)")};
   transition:
     opacity 0.3s ease,
     transform 0.3s ease;
@@ -118,15 +124,62 @@ const FileUploadButton = styled.label`
 const Message = styled.div`
   display: flex;
   align-items: center;
-  max-width: 70%;
-  padding: 10px;
+  max-width: 70%; /* Limit width to avoid overly wide messages */
+  padding: 10px 15px;
+  margin: 5px 0; /* Add vertical spacing between messages */
   border-radius: 10px;
   background: ${({ isBot }) =>
     isBot ? theme.colors.secondary : theme.colors.secondary};
   align-self: ${({ isBot }) => (isBot ? "flex-start" : "flex-end")};
+  word-wrap: break-word; /* Ensure long words break appropriately */
+  font-size: 1em; /* Set a default font size */
+
+  @media (max-width: 768px) {
+    max-width: 90%; /* Increase max-width for smaller screens */
+    font-size: 0.9em; /* Slightly smaller font for mobile */
+    padding: 8px 12px; /* Adjust padding for smaller screens */
+  }
+
+  .p {
+    white-space: pre-line; /* Ensure newlines are respected */
+    line-height: 1.5; /* Improve readability */
+  }
+`;
+
+const MessageText = styled.div`
+  flex: 1; /* Allow the text container to expand */
+  background: ${({ isBot }) =>
+    isBot ? theme.colors.secondary : theme.colors.secondary};
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 70%;
+  word-wrap: break-word; /* Ensure long words break properly */
+  white-space: pre-line; /* Preserve line breaks */
+  font-size: 1em;
+  line-height: 1.5; /* Improve readability */
+
+  @media (max-width: 768px) {
+    font-size: 0.9em; /* Adjust font size for mobile */
+    padding: 8px 12px;
+  }
+`;
+
+const MessageContainer = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-direction: ${({ isBot }) =>
+    isBot
+      ? "row"
+      : "row-reverse"}; /* Bot messages align left, user messages right */
+
+  @media (max-width: 768px) {
+    gap: 8px; /* Reduce gap for smaller screens */
+  }
 `;
 
 const Avatar = styled.div`
+  flex-shrink: 0; /* Prevent avatar from shrinking */
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -137,16 +190,20 @@ const Avatar = styled.div`
   justify-content: center;
   color: white;
   font-weight: bold;
-  margin-right: 10px;
+
+  @media (max-width: 768px) {
+    width: 35px; /* Slightly smaller avatar for mobile */
+    height: 35px;
+  }
 `;
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
-  const [pdf, setPdf] = useState([]);
+  const [pdfText, setPdfText] = useState([]);
   const [file, setFile] = useState(null);
-  const [isUrlValid, setIsUrlValid] = useState(false);
-  const [input, setInput] = useState("");
+  const [textInput, setInput] = useState("");
   const [error, setError] = useState("");
+  const [response, setResponse] = useState(null);
 
   const parsePdf = async (file) => {
     const fileReader = new FileReader();
@@ -163,35 +220,73 @@ const Chatbot = () => {
       }
 
       console.log("Extracted text:", extractedText);
-      setPdf(extractedText);
+      setPdfText(extractedText);
     };
 
     fileReader.readAsArrayBuffer(file);
   };
 
-  const handleSendMessage = () => {
-    if (input.trim() && file && isValidUrl(input)) {
-      setMessages([...messages, { text: input, isBot: false }]);
+  const handleSendMessage = async () => {
+    console.log("Endpoint:", process.env.REACT_APP_RANK_ENDPOINT);
+    console.log("API Key:", process.env.REACT_APP_RANK_API_KEY);
+    if (textInput.trim() && file && isValidUrl(textInput)) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Please review and rank this job with my resume: " + textInput,
+          isBot: false,
+        },
+        { text: "Let me take a look!", isBot: true },
+      ]);
       setInput("");
       setFile(null);
       setError("");
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { text: "This is a bot response.", isBot: true },
-        ]);
-      }, 1000);
-    } else if (!isValidUrl(input)) {
-      setError("Please enter a valid URL.");
-    } else if (!file) {
-      setError("A file must be uploaded.");
+      const endpoint = process.env.REACT_APP_RANK_ENDPOINT;
+      const apiKey = process.env.REACT_APP_RANK_API_KEY;
+      const requestData = {
+        url: textInput,
+        resume: pdfText,
+      };
+      const result = await axios.post(endpoint, requestData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
+      const botResp =
+        "The job posting for " +
+        result.data["positionTitle"] +
+        " at " +
+        result.data["companyName"];
+      const botResp2 =
+        "has a ranking of " +
+        `${(result.data["rank"] * 100).toFixed(2)}%` +
+        "!\n";
+      const botResp3 =
+        "\nHere is some feedback from me:\n" + result.data["feedback"];
+      const fullResponse = `${botResp} ${botResp2} ${botResp3}`;
+      console.log("Result: ", botResp + botResp2 + botResp3);
+      setMessages((prev) => [...prev, { text: fullResponse, isBot: true }]);
+    } else if (!isValidUrl(textInput) && !file) {
+      setError(MISSING_FILE_URL);
+    } else if (!file && isValidUrl(textInput)) {
+      setError(MISSING_FILE);
+    } else if (file && !isValidUrl(textInput)) {
+      setError(MISSING_URL);
     }
   };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
-    setIsUrlValid(isValidUrl(value)); // Update URL validation state
+
+    if (!isValidUrl(value) && !file) {
+      setError(MISSING_FILE_URL);
+    } else if (file && !isValidUrl(value)) {
+      setError(MISSING_URL);
+    } else {
+      setError("");
+    }
   };
 
   const handleFileUpload = (event) => {
@@ -205,15 +300,17 @@ const Chatbot = () => {
       // Parse the file if needed
       parsePdf(uploadedFile);
     } else {
-      setError("Only PDF files are allowed.");
+      setError(error.concat("Only PDF files are allowed."));
       setFile(null);
     }
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = async (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); // Prevent newline
-      handleSendMessage();
+      await handleSendMessage();
+    } else if (event.key === "Enter" && event.shiftKey) {
+      event.preventDefault();
     }
   };
 
@@ -222,10 +319,10 @@ const Chatbot = () => {
       <ChatHeader>ResumeAI Ranker</ChatHeader>
       <ChatWindow>
         {messages.map((message, index) => (
-          <Message key={index} isBot={message.isBot}>
+          <MessageContainer key={index} isBot={message.isBot}>
             <Avatar isBot={message.isBot}>{message.isBot ? "B" : "U"}</Avatar>
-            {message.text}
-          </Message>
+            <MessageText>{message.text}</MessageText>
+          </MessageContainer>
         ))}
       </ChatWindow>
       <ChatInputSection>
@@ -234,7 +331,8 @@ const Chatbot = () => {
             <ErrorMessage show={!!error}>{error}</ErrorMessage>
             <InputField
               rows="1"
-              value={input}
+              value={textInput}
+              onKeyDown={handleKeyDown}
               onChange={handleInputChange}
               placeholder="Enter a URL..."
               className="input-field"
@@ -251,7 +349,7 @@ const Chatbot = () => {
             <SendButton
               onClick={handleSendMessage}
               className="send-button"
-              disabled={!input.trim() || !file || error}
+              disabled={!textInput.trim() || !file || error}
             >
               Send
             </SendButton>

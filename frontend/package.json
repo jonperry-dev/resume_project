@@ -6,8 +6,8 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.7.8",
     "npm": "^10.9.1",
-    "pdfjs-dist": "^4.9.124",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
@@ -60,6 +60,8 @@
     "eslint-plugin-react": "^7.37.2",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.10",
-    "prettier": "^3.4.1"
+    "pdfjs-dist": "^4.9.124",
+    "prettier": "^3.4.1",
+    "worker-loader": "^3.0.8"
   }
 }

@@ -1,11 +1,23 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from typing import Optional
 from pydantic import BaseModel
+import inspect
+from typing import get_type_hints
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import uvicorn
 import os
-
+import model as ml_model
+from fastapi.middleware.cors import CORSMiddleware
 
 HOST_NAME: str = "APP_HOST"
 PORT: str = "APP_PORT"
+API_KEY: str = os.getenv("RANK_API_KEY")
+
+
+class RankRequest(BaseModel):
+    url: str
+    resume: str
 
 
 # Replace with your ML model loading code
@@ -18,25 +30,76 @@ class MLModel:
 app = FastAPI()
 model = MLModel()
 
+pipe = ml_model.get_model()
 
-# Define input schema for the API
-class InputData(BaseModel):
-    feature_1: str
-    feature_2: str
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+def verify_token(authorization: str):
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401, detail="Invalid or missing Authorization header"
+        )
+    token = authorization.split("Bearer ")[1]
+    verify_api_key(token.strip())
+
+
+def verify_api_key(RANK_API_KEY: Optional[str]):
+    if RANK_API_KEY != API_KEY:
+        raise HTTPException(status_code=403, detail="Unauthorized access")
 
 
 @app.get("/")
 def root():
-    return {"message": "ML Model Backend Running"}
+    return {"message": "ML Model Backend Running. Please use the /rank endpoint"}
 
 
-@app.post("/predict")
-def predict(data: InputData):
+@app.get("/rank", dependencies=[Depends(verify_token)])
+def rank_params():
+    signature = inspect.signature(RankRequest)
+    hints = get_type_hints(RankRequest)
+    params = {
+        param.name: hints.get(param.name, None)
+        for param in signature.parameters.values()
+    }
+    return {"url": "String", "resume": "String"}
+
+
+@app.post("/rank", dependencies=[Depends(verify_token)])
+def rank(rank_request: RankRequest) -> dict:
+    job_posting = scrape(rank_request.url)
+    output = ml_model.predict(pipe, job_posting, rank_request.resume)
+    return output
+
+
+def scrape(url: str):
+    # Set up Selenium with headless Chrome
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+
+    # Initialize WebDriver
+    driver = webdriver.Chrome(options=chrome_options)
     try:
-        result = model.predict(data.model_dump())
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Open the webpage
+        driver.get(url)
+
+        # Get the visible text from the body tag
+        body_text = driver.find_element("tag name", "body").text
+
+        return body_text
+    finally:
+        # Quit the driver
+        driver.quit()
+    return None
 
 
 if __name__ == "__main__":

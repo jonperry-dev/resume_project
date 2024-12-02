@@ -10,6 +10,7 @@ GCP_REPOSITORY_NAME := resume-ai-docker-repo
 GCP_PROJECT_ID := proud-portfolio-386621
 SERVER_HOST_NAME := 0.0.0.0
 SERVER_PORT := 8080
+MODEL_DIR ?= Llama-3.2-3B-Instruct
 DOCKER_FILE ?= server.Dockerfile
 IMAGE_NAME ?= resumeai-service
 TAG := latest
@@ -248,21 +249,30 @@ gcp-login:
 
 .PHONY: build-backend
 build-backend:
-	docker build \
+	@echo "$(HF_TOKEN)" > /tmp/hf_token
+	DOCKER_BUILDKIT=1 docker build \
+		--secret id=hf_token,src=/tmp/hf_token \
 		-f $(DOCKER_FILE) \
 		-t $(IMAGE_NAME):$(TAG) \
 		--build-arg HOST_NAME=$(SERVER_HOST_NAME) \
 		--build-arg PORT=$(SERVER_PORT) \
 		--build-arg BACKEND_DIR=$(BACKEND_DIR) \
+		--build-arg MODEL_DIR=$(MODEL_DIR) \
+		--build-arg RANK_API_KEY=$(RANK_API_KEY) \
 		.
+	rm /tmp/hf_token
 
 .PHONY: build-frontend
 build-frontend:
-	docker build \
+	@echo "$(REACT_APP_RANK_ENDPOINT)" > /tmp/api_token
+	DOCKER_BUILDKIT=1 docker build \
+		--secret id=api_token,src=/tmp/api_token \
 		-f $(DOCKER_FILE) \
 		-t $(IMAGE_NAME):$(TAG) \
 		--build-arg FRONTEND_DIR=$(FRONTEND_DIR) \
+		--build-arg REACT_APP_RANK_ENDPOINT=$(REACT_APP_RANK_ENDPOINT) \
 		.
+	rm /tmp/api_token
 
 .PHONY: gcp-deploy-backend
 gcp-deploy-backend:
