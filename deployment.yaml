@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resumeai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resumeai
+  template:
+    metadata:
+      labels:
+        app: resumeai
+    spec:
+      containers:
+        - name: resumeai-service
+          image: us-central1-docker.pkg.dev/proud-portfolio-386621/resume-ai-docker-repo/resumeai-service
+          ports:
+            - containerPort: 8080

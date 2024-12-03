@@ -6,11 +6,12 @@ import os
 
 def get_model():
     model_name = os.environ.get("MODEL_DIR")
+    device = "gpu" if torch.cuda.is_available() else "cpu"
     pipe = pipeline(
         "text-generation",
         model=model_name,
         torch_dtype=torch.bfloat16,
-        device="cpu",
+        device=device,
     )
     return pipe
 

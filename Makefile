@@ -278,14 +278,6 @@ gcp-deploy-backend:
 	$(MAKE) $(MAKEFLAGS) build-backend
 	docker tag $(IMAGE_NAME) $(IMAGE_URI)
 	docker push $(IMAGE_URI)
-	gcloud run deploy $(IMAGE_NAME) \
-		--image $(IMAGE_URI) \
-		--region $(GCP_REGION) \
-		--platform managed \
-		--cpu=4 \
-		--memory=16Gi \
-		--timeout=3600s \
-		--allow-unauthenticated
 
 .PHONY: gcp-deploy-frontend
 gcp-deploy-frontend:
