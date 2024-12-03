@@ -96,4 +96,9 @@ jobs:
           GCP_REGION: ${{ secrets.GCP_REGION }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           RANK_API_KEY: ${{ secrets.REACT_APP_RANK_API_KEY }}
-        run: make gcp-deploy-backend
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          make gcp-deploy-backend
