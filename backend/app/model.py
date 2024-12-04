@@ -11,43 +11,85 @@ def get_model():
         "text-generation",
         model=model_name,
         torch_dtype=torch.bfloat16,
-        device=device,
+        device="cpu",
     )
     return pipe
 
 
 def predict(pipe, job_posting, resume):
-    example = """
-    {
-        "companyName": "TechCorp",
-        "positionTitle": "Software Engineer",
-        "rank": 0.85,
-        "feedback": "Your resume aligns well with the job posting. To improve, consider adding specific examples of DevOps practices and detailing projects involving AWS. Highlight how your skills match the innovative team environment at TechCorp.",
-    }
-    """
-    prompt = f"""
-    You are an expert career coach. Analyze the following job posting and resume:
 
-    Job Posting:
+    example = json.dumps(
+        {"companyName": "Example Inc.", "positionTitle": "Software Engineer"}, indent=4
+    )
+
+    prompt = f"""
+    You are an expert job posting analyzer. Your task is to extract the company name and the job title from a job posting.
+
+    **Job Posting:**
     {job_posting}
 
-    Make sure and triple check that these are what define the values of each key:
-    1. "companyName" is the Company Name for the job posting. This is very important!! This is only from the data below "Job Posting" DO NOT Use the resume data
-    2. "positionTitle" is the position that the job posting is for. DO NOT get the wrong value for this!!! This is only from the data below "Job Posting" DO NOT Use the resume data
-    3. "feedback" is extremely helpful and make sure you explain what you think would help.
-    4. "rank" is an extremely important value that determines how aligned the resume skills are to the job posting.
+    Guidelines:
+    1. Extract **"companyName"**: This should be the exact name of the company offering the job. Do not guess or infer beyond the information provided.
+    2. Extract **"positionTitle"**: This should be the exact job title for the position. Look for clear headers or mentions of the job title within the posting.
 
-    Resume:
-    {resume}
-
-    1. Extract the "companyName" and "positionTitle" from the job posting.
-    2. Rate the resume's fit for the job on a scale from 0.0 to 1.0 (as "rank").
-    3. Provide "feedback" for improving the resume to better match the job posting.
-    Format the output as a JSON object with "companyName", "positionTitle", "rank", and "feedback".
-    Only return to me in the following format with this example data as values to the JSON file:
+    Output Format:
+    - Return a JSON object with the keys: "companyName" and "positionTitle".
+    - Ensure the output is valid JSON and matches this example format:
     {example}
 
-    I want the json to be valid and in this format. ONLY Respond with the JSON and nothing else! Do Not Mix The Resume Data for Company Name or Positon Title!!
+    Rules:
+    - Do NOT include any additional text, explanations, or commentary outside the JSON object.
+    - Only use the information explicitly provided in the job posting.
+
+    Example Output:
+    {example}
+    """
+
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompt},
+    ]
+
+    outputs = pipe(
+        messages,
+        max_new_tokens=256,
+    )
+    company_info = json.loads(outputs[0]["generated_text"][-1]["content"])
+
+    example = json.dumps(
+        {
+            "rank": 0.85,
+            "feedback": "The resume aligns well with the job requirements. To improve, consider adding specific keywords like 'microservices' and detailing experience with Docker.",
+        },
+        indent=4,
+    )
+
+    prompt = f"""
+    You are an expert career coach AI. Your task is to analyze a job posting and a resume, then generate a JSON object that ranks the resume's fit for the job and provides actionable feedback.
+
+    **Job Posting:**
+    {job_posting}
+
+    **Resume:**
+    {resume}
+
+    Follow these guidelines strictly:
+    1. Extract **"companyName"**: This must match the company name in the job posting. Do NOT infer it from the resume.
+    2. Extract **"positionTitle"**: This should be the exact title of the job position in the posting. Avoid guessing or using data from the resume.
+    3. Calculate **"rank"**: A numerical score between 0.0 and 1.0 based on how well the resume matches the job posting's skills and qualifications.
+    4. Provide **"feedback"**: Offer actionable advice to improve the resume's alignment with the job posting. Be specific and helpful.
+
+    Output Format:
+    - Return a JSON object with the keys: "rank" and "feedback".
+    - Ensure the output is valid JSON and matches this example format:
+    {example}
+
+    Rules:
+    - Do NOT include any additional text, explanations, or commentary outside the JSON object.
+    - Only use the information explicitly provided in the job posting.
+
+    Example Output:
+    {example}
     """
 
     messages = [
@@ -59,4 +101,5 @@ def predict(pipe, job_posting, resume):
         max_new_tokens=256,
     )
     print(outputs[0]["generated_text"][-1]["content"])
-    return json.loads(outputs[0]["generated_text"][-1]["content"])
+    print(company_info)
+    return {**company_info, **json.loads(outputs[0]["generated_text"][-1]["content"])}

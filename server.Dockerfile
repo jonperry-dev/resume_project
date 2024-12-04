@@ -50,7 +50,7 @@ RUN --mount=type=secret,id=hf_token \
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 RUN apt-get install -y git-lfs
 RUN git lfs install
-RUN git clone https://huggingface.co/unsloth/Llama-3.2-3B-Instruct
+RUN git clone https://huggingface.co/unsloth/Llama-3.2-1B-Instruct
 
 # Copy the server code
 COPY  ${BACKEND_DIR}/app/server.py .
