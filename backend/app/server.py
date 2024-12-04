@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 HOST_NAME: str = "APP_HOST"
 PORT: str = "APP_PORT"
 API_KEY: str = os.getenv("RANK_API_KEY")
-HTTPS_PORT: int = 8443
+HTTPS_PORT: int = 443
 
 
 class RankRequest(BaseModel):
@@ -108,5 +108,5 @@ def scrape(url: str):
 
 if __name__ == "__main__":
     host_name = os.environ.get(HOST_NAME, "0.0.0.0")
-    port = int(os.environ.get(PORT, 8443))
+    port = int(os.environ.get(PORT, HTTPS_PORT))
     uvicorn.run(app, host=host_name, port=port)
