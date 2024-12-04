@@ -62,4 +62,4 @@ rm chromedriver_linux64.zip
 EXPOSE ${PORT}
 
 # Run the application
-CMD ["sh -c certbot certonly --standalone --non-interactive --agree-tos -m jon@jonperry.dev -d resumerank.jonperry.dev && python server.py"]
+CMD ["python", "server.py"]
