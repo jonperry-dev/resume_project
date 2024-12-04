@@ -20,7 +20,7 @@ spec:
             - containerPort: 8443
           volumeMounts:
             - name: fastapi-tls-volume
-              mountPath: /etc/ssl/certs
+              mountPath: "/etc/tls"
               readOnly: true
           env:
             - name: ENABLE_HTTPS

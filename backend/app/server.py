@@ -114,8 +114,8 @@ if __name__ == "__main__":
             app,
             host=host_name,
             port=port,
-            ssl_keyfile="/etc/ssl/certs/tls.key",
-            ssl_certfile="/etc/ssl/certs/tls.crt",
+            ssl_keyfile="/etc/tls/tls.key",
+            ssl_certfile="/etc/tls/tls.crt",
         )
     else:
         uvicorn.run(app, host=host_name, port=port)
