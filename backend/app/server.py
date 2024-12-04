@@ -38,7 +38,9 @@ pipe = ml_model.get_model()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://localhost:5000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,7 +108,7 @@ def scrape(url: str):
 
 if __name__ == "__main__":
     host_name = os.environ.get(HOST_NAME, "0.0.0.0")
-    port = int(os.environ.get(PORT, 8080))
+    port = int(os.environ.get(PORT, 8443))
     if port == HTTPS_PORT:
         uvicorn.run(
             app,
