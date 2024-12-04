@@ -5,6 +5,7 @@ import inspect
 from typing import get_type_hints
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import uvicorn
@@ -15,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 HOST_NAME: str = "APP_HOST"
 PORT: str = "APP_PORT"
 API_KEY: str = os.getenv("RANK_API_KEY")
+HTTPS_PORT: int = 8443
 
 
 class RankRequest(BaseModel):
@@ -36,7 +38,7 @@ pipe = ml_model.get_model()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,7 +94,6 @@ def scrape(url: str):
     try:
         # Open the webpage
         driver.get(url)
-
         # Get the visible text from the body tag
         body_text = driver.find_element("tag name", "body").text
 
@@ -105,5 +106,14 @@ def scrape(url: str):
 
 if __name__ == "__main__":
     host_name = os.environ.get(HOST_NAME, "0.0.0.0")
-    port = int(os.environ.get(PORT, 8080))
-    uvicorn.run(app, host=host_name, port=port)
+    port = int(os.environ.get(PORT, 8443))
+    if port == HTTPS_PORT:
+        uvicorn.run(
+            app,
+            host=host_name,
+            port=port,
+            ssl_keyfile="/etc/ssl/certs/tls.key",
+            ssl_certfile="/etc/ssl/certs/tls.crt",
+        )
+    else:
+        uvicorn.run(app, host=host_name, port=port)

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.2-cudnn-runtime-ubuntu22.04
+FROM python:3.11-slim
 
 # Build arguments
 ARG PORT
@@ -12,18 +12,9 @@ ENV APP_HOST=${HOST_NAME}
 ENV APP_PORT=${PORT}
 ENV MODEL_DIR=${MODEL_DIR}
 ENV RANK_API_KEY=${RANK_API_KEY}
-ENV TZ=America/Chicago
 
 WORKDIR /app
 
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt update && apt upgrade -y
-RUN apt install software-properties-common -y
-RUN add-apt-repository -y 'ppa:deadsnakes/ppa'
-RUN apt install python3.11 python3-pip -y
-
-ENV DEBIAN_FRONTEND=noninteractive
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     wget \
@@ -34,9 +25,8 @@ RUN apt-get update && apt-get install -y \
     libgconf-2-4 \
     default-jdk \
     git \
-    tzdata \
+    certbot \
     && apt-get clean
-ENV DEBIAN_FRONTEND=
 
 COPY ${BACKEND_DIR}/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -72,4 +62,4 @@ rm chromedriver_linux64.zip
 EXPOSE ${PORT}
 
 # Run the application
-CMD ["python", "server.py"]
+CMD ["sh -c certbot certonly --standalone --non-interactive --agree-tos -m jon@jonperry.dev -d resumerank.jonperry.dev && python server.py"]

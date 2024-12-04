@@ -16,13 +16,6 @@ IMAGE_NAME ?= resumeai-service
 TAG := latest
 IMAGE_URI = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(GCP_REPOSITORY_NAME)/$(IMAGE_NAME):$(TAG)
 
-default: all
-
-.PHONY: all
-all:
-	$(MAKE) $(MAKEFLAGS) fmt
-	$(MAKE) $(MAKEFLAGS) test
-
 .PHONY: lint-frontend
 lint-frontend:
 	@echo "Linting frontend..."
@@ -249,9 +242,14 @@ gcp-login:
 
 .PHONY: build-backend
 build-backend:
-	@echo "$(HF_TOKEN)" > /tmp/hf_token
+	@echo "$$HF_TOKEN" > /tmp/hf_token
+	@echo "$$SSL_CERT" > /tmp/cert.pem
+	@echo "$$SSL_KEY" > /tmp/key.pem
+
 	DOCKER_BUILDKIT=1 docker build \
 		--secret id=hf_token,src=/tmp/hf_token \
+		--secret id=ssl_cert,src=/tmp/cert.pem \
+    	--secret id=ssl_key,src=/tmp/key.pem \
 		-f $(DOCKER_FILE) \
 		-t $(IMAGE_NAME):$(TAG) \
 		--build-arg HOST_NAME=$(SERVER_HOST_NAME) \
@@ -260,7 +258,7 @@ build-backend:
 		--build-arg MODEL_DIR=$(MODEL_DIR) \
 		--build-arg RANK_API_KEY=$(RANK_API_KEY) \
 		.
-	rm /tmp/hf_token
+	rm /tmp/hf_token /tmp/cert.pem /tmp/key.pem
 
 .PHONY: build-frontend
 build-frontend:
@@ -289,3 +287,10 @@ gcp-deploy-frontend:
 		--region $(GCP_REGION) \
 		--platform managed \
 		--allow-unauthenticated
+
+default: all
+
+.PHONY: all
+all:
+	$(MAKE) $(MAKEFLAGS) fmt
+	$(MAKE) $(MAKEFLAGS) test
