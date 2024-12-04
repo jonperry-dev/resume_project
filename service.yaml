@@ -12,6 +12,6 @@ spec:
       targetPort: 8080
     - name: https
       protocol: TCP
-      port: 443
+      port: 8443
       targetPort: 8443
   type: LoadBalancer
