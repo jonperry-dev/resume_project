@@ -16,16 +16,4 @@ spec:
         - name: resumeai-service
           image: us-central1-docker.pkg.dev/proud-portfolio-386621/resume-ai-docker-repo/resumeai-service
           ports:
-            - containerPort: 8080
-            - containerPort: 8443
-          volumeMounts:
-            - name: fastapi-tls-volume
-              mountPath: "/etc/tls"
-              readOnly: true
-          env:
-            - name: ENABLE_HTTPS
-              value: "true"
-      volumes:
-        - name: fastapi-tls-volume
-          secret:
-            secretName: fastapi-tls
+            - containerPort: 443
